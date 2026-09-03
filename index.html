@@ -56,37 +56,79 @@
           <button class="btn btn-outline-primary btn-sm" onclick="loadDashboard()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
         </div>
 
+        <!-- 9 Metric Cards Grid -->
         <div class="row g-3 mb-4">
-          <div class="col-md-3">
-            <div class="card card-stat bg-gradient-info p-3">
-              <h6>Total Seluruh Kas</h6>
-              <h3 class="fw-bold my-2" id="dash-combined-saldo">Rp 0</h3>
-              <small>Gabungan Sekolah & Yayasan</small>
-            </div>
-          </div>
-          <div class="col-md-3">
-            <div class="card card-stat bg-gradient-primary p-3">
-              <h6>Saldo Kas Sekolah</h6>
-              <h3 class="fw-bold my-2" id="dash-sekolah-saldo">Rp 0</h3>
+          <!-- Sekolah Section -->
+          <div class="col-md-4">
+            <div class="card card-stat bg-gradient-success p-3">
+              <h6>Pemasukan Kas Sekolah</h6>
+              <h4 class="fw-bold my-2" id="dash-sekolah-masuk">Rp 0</h4>
               <small>Unit Sekolah</small>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-4">
+            <div class="card card-stat bg-gradient-danger p-3">
+              <h6>Pengeluaran Kas Sekolah</h6>
+              <h4 class="fw-bold my-2" id="dash-sekolah-keluar">Rp 0</h4>
+              <small>Unit Sekolah</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card card-stat bg-gradient-primary p-3">
+              <h6>Saldo Kas Sekolah</h6>
+              <h4 class="fw-bold my-2" id="dash-sekolah-saldo">Rp 0</h4>
+              <small>Unit Sekolah</small>
+            </div>
+          </div>
+
+          <!-- Yayasan Section -->
+          <div class="col-md-4">
             <div class="card card-stat bg-gradient-success p-3">
-              <h6>Saldo Kas Yayasan</h6>
-              <h3 class="fw-bold my-2" id="dash-yayasan-saldo">Rp 0</h3>
+              <h6>Pemasukan Kas Yayasan</h6>
+              <h4 class="fw-bold my-2" id="dash-yayasan-masuk">Rp 0</h4>
               <small>Unit Yayasan</small>
             </div>
           </div>
-          <div class="col-md-3">
+          <div class="col-md-4">
             <div class="card card-stat bg-gradient-danger p-3">
-              <h6>Total Pengeluaran Combined</h6>
-              <h3 class="fw-bold my-2" id="dash-combined-keluar">Rp 0</h3>
-              <small>Aktivitas Keluar</small>
+              <h6>Pengeluaran Kas Yayasan</h6>
+              <h4 class="fw-bold my-2" id="dash-yayasan-keluar">Rp 0</h4>
+              <small>Unit Yayasan</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card card-stat bg-gradient-primary p-3">
+              <h6>Saldo Kas Yayasan</h6>
+              <h4 class="fw-bold my-2" id="dash-yayasan-saldo">Rp 0</h4>
+              <small>Unit Yayasan</small>
+            </div>
+          </div>
+
+          <!-- Total Gabungan Section -->
+          <div class="col-md-4">
+            <div class="card card-stat bg-gradient-info p-3">
+              <h6>Total Pemasukan (Sekolah & Yayasan)</h6>
+              <h4 class="fw-bold my-2" id="dash-combined-masuk">Rp 0</h4>
+              <small>Gabungan</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card card-stat bg-gradient-danger p-3">
+              <h6>Total Pengeluaran (Sekolah & Yayasan)</h6>
+              <h4 class="fw-bold my-2" id="dash-combined-keluar">Rp 0</h4>
+              <small>Gabungan</small>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card card-stat bg-gradient-primary p-3">
+              <h6>Total Saldo (Sekolah & Yayasan)</h6>
+              <h4 class="fw-bold my-2" id="dash-combined-saldo">Rp 0</h4>
+              <small>Gabungan</small>
             </div>
           </div>
         </div>
 
+        <!-- Transaksi Terakhir -->
         <div class="card border-0 shadow-sm">
           <div class="card-header bg-white py-3">
             <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>5 Transaksi Terakhir</h5>
@@ -214,7 +256,7 @@
 </div>
 
 <script>
-  // URL Deployment Web App Google Apps Script Anda
+  // GANTI DENGAN URL WEB APP DEPLOYMENT GOOGLE APPS SCRIPT ANDA
   const GAS_URL = "https://script.google.com/macros/s/AKfycbzJ7nm6tBBLIU-Ez-sXl490nLc4YvVvWiU5IUAkIGV4aZkWaFOuOssxXxtSUsUsZa4H/exec";
 
   function formatRupiah(number) {
@@ -239,16 +281,27 @@
     if(page === 'laporan') loadLaporan();
   }
 
-  // Fetch Dashboard API
+  // Fetch Dashboard Data
   function loadDashboard() {
     fetch(`${GAS_URL}?action=getDashboard`)
       .then(res => res.json())
       .then(res => {
-        document.getElementById('dash-combined-saldo').innerText = formatRupiah(res.combined.saldo);
+        // Kas Sekolah
+        document.getElementById('dash-sekolah-masuk').innerText = formatRupiah(res.sekolah.masuk);
+        document.getElementById('dash-sekolah-keluar').innerText = formatRupiah(res.sekolah.keluar);
         document.getElementById('dash-sekolah-saldo').innerText = formatRupiah(res.sekolah.saldo);
-        document.getElementById('dash-yayasan-saldo').innerText = formatRupiah(res.yayasan.saldo);
-        document.getElementById('dash-combined-keluar').innerText = formatRupiah(res.combined.keluar);
 
+        // Kas Yayasan
+        document.getElementById('dash-yayasan-masuk').innerText = formatRupiah(res.yayasan.masuk);
+        document.getElementById('dash-yayasan-keluar').innerText = formatRupiah(res.yayasan.keluar);
+        document.getElementById('dash-yayasan-saldo').innerText = formatRupiah(res.yayasan.saldo);
+
+        // Combined / Gabungan
+        document.getElementById('dash-combined-masuk').innerText = formatRupiah(res.combined.masuk);
+        document.getElementById('dash-combined-keluar').innerText = formatRupiah(res.combined.keluar);
+        document.getElementById('dash-combined-saldo').innerText = formatRupiah(res.combined.saldo);
+
+        // Transaksi Terakhir
         var tbody = document.getElementById('dash-recent-table');
         tbody.innerHTML = '';
         if(res.recentTransactions.length === 0) {
@@ -272,7 +325,7 @@
       .catch(err => console.error('Error Dashboard:', err));
   }
 
-  // Fetch Save Transaction API (POST)
+  // Simpan Transaksi via POST
   function handleSave(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
@@ -310,7 +363,7 @@
     });
   }
 
-  // Fetch Laporan API
+  // Fetch Laporan Data
   function loadLaporan() {
     var entitas = document.getElementById('filter-entitas').value;
     var tglAwal = document.getElementById('filter-tgl-awal').value;
