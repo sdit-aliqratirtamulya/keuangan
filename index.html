@@ -56,7 +56,6 @@
           <button class="btn btn-outline-primary btn-sm" onclick="loadDashboard()"><i class="bi bi-arrow-clockwise me-1"></i>Refresh</button>
         </div>
 
-        <!-- Metric Cards -->
         <div class="row g-3 mb-4">
           <div class="col-md-3">
             <div class="card card-stat bg-gradient-info p-3">
@@ -88,7 +87,6 @@
           </div>
         </div>
 
-        <!-- Transaksi Terakhir -->
         <div class="card border-0 shadow-sm">
           <div class="card-header bg-white py-3">
             <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2"></i>5 Transaksi Terakhir</h5>
@@ -151,7 +149,7 @@
                 <label class="form-label">Keterangan</label>
                 <textarea class="form-control" id="tx-keterangan" rows="3"></textarea>
               </div>
-              <button type="submit" class="btn btn-primary w-100">Simpan Transaksi</button>
+              <button type="submit" class="btn btn-primary w-100" id="btn-submit">Simpan Transaksi</button>
             </form>
           </div>
         </div>
@@ -161,7 +159,6 @@
       <div id="page-laporan" style="display: none;">
         <h3 class="fw-bold mb-4">Laporan Kas</h3>
         
-        <!-- Filter Box -->
         <div class="card border-0 shadow-sm mb-4">
           <div class="card-body">
             <div class="row g-3">
@@ -188,7 +185,6 @@
           </div>
         </div>
 
-        <!-- Table Laporan -->
         <div class="card border-0 shadow-sm">
           <div class="card-body p-0">
             <div class="table-responsive">
@@ -218,19 +214,19 @@
 </div>
 
 <script>
-  // Format Currency Rupiah
+  // URL Deployment Web App Google Apps Script Anda
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzJ7nm6tBBLIU-Ez-sXl490nLc4YvVvWiU5IUAkIGV4aZkWaFOuOssxXxtSUsUsZa4H/exec";
+
   function formatRupiah(number) {
     return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
   }
 
-  // Formatting Date
   function formatDate(dStr) {
     if(!dStr) return '-';
     var d = new Date(dStr);
     return d.toLocaleDateString('id-ID');
   }
 
-  // Navigation Logic
   function showPage(page) {
     document.getElementById('page-dashboard').style.display = page === 'dashboard' ? 'block' : 'none';
     document.getElementById('page-transaksi').style.display = page === 'transaksi' ? 'block' : 'none';
@@ -243,86 +239,111 @@
     if(page === 'laporan') loadLaporan();
   }
 
-  // Load Dashboard Data
+  // Fetch Dashboard API
   function loadDashboard() {
-    google.script.run.withSuccessHandler(function(res) {
-      document.getElementById('dash-combined-saldo').innerText = formatRupiah(res.combined.saldo);
-      document.getElementById('dash-sekolah-saldo').innerText = formatRupiah(res.sekolah.saldo);
-      document.getElementById('dash-yayasan-saldo').innerText = formatRupiah(res.yayasan.saldo);
-      document.getElementById('dash-combined-keluar').innerText = formatRupiah(res.combined.keluar);
+    fetch(`${GAS_URL}?action=getDashboard`)
+      .then(res => res.json())
+      .then(res => {
+        document.getElementById('dash-combined-saldo').innerText = formatRupiah(res.combined.saldo);
+        document.getElementById('dash-sekolah-saldo').innerText = formatRupiah(res.sekolah.saldo);
+        document.getElementById('dash-yayasan-saldo').innerText = formatRupiah(res.yayasan.saldo);
+        document.getElementById('dash-combined-keluar').innerText = formatRupiah(res.combined.keluar);
 
-      var tbody = document.getElementById('dash-recent-table');
-      tbody.innerHTML = '';
-      if(res.recentTransactions.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3">Belum ada transaksi.</td></tr>';
-        return;
-      }
-      res.recentTransactions.forEach(function(item) {
-        var badge = item.jenis === 'Pemasukan' ? 'bg-success' : 'bg-danger';
-        tbody.innerHTML += `
-          <tr>
-            <td>${formatDate(item.tanggal)}</td>
-            <td><span class="badge bg-secondary">${item.entitas}</span></td>
-            <td>${item.kategori}</td>
-            <td>${item.keterangan || '-'}</td>
-            <td><span class="badge ${badge}">${item.jenis}</span></td>
-            <td class="fw-bold">${formatRupiah(item.jumlah)}</td>
-          </tr>
-        `;
-      });
-    }).getDashboardSummary();
+        var tbody = document.getElementById('dash-recent-table');
+        tbody.innerHTML = '';
+        if(res.recentTransactions.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3">Belum ada transaksi.</td></tr>';
+          return;
+        }
+        res.recentTransactions.forEach(function(item) {
+          var badge = item.jenis === 'Pemasukan' ? 'bg-success' : 'bg-danger';
+          tbody.innerHTML += `
+            <tr>
+              <td>${formatDate(item.tanggal)}</td>
+              <td><span class="badge bg-secondary">${item.entitas}</span></td>
+              <td>${item.kategori}</td>
+              <td>${item.keterangan || '-'}</td>
+              <td><span class="badge ${badge}">${item.jenis}</span></td>
+              <td class="fw-bold">${formatRupiah(item.jumlah)}</td>
+            </tr>
+          `;
+        });
+      })
+      .catch(err => console.error('Error Dashboard:', err));
   }
 
-  // Handle Form Transaction Submit
+  // Fetch Save Transaction API (POST)
   function handleSave(e) {
     e.preventDefault();
-    var form = {
-      entitas: document.getElementById('tx-entitas').value,
-      tanggal: document.getElementById('tx-tanggal').value,
-      jenis: document.getElementById('tx-jenis').value,
-      kategori: document.getElementById('tx-kategori').value,
-      jumlah: document.getElementById('tx-jumlah').value,
-      keterangan: document.getElementById('tx-keterangan').value
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.innerText = 'Menyimpan...';
+
+    var payload = {
+      action: 'saveTransaction',
+      data: {
+        entitas: document.getElementById('tx-entitas').value,
+        tanggal: document.getElementById('tx-tanggal').value,
+        jenis: document.getElementById('tx-jenis').value,
+        kategori: document.getElementById('tx-kategori').value,
+        jumlah: document.getElementById('tx-jumlah').value,
+        keterangan: document.getElementById('tx-keterangan').value
+      }
     };
 
-    google.script.run.withSuccessHandler(function(res) {
+    fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(res => {
       alert(res.message);
       document.getElementById('form-transaksi').reset();
-    }).saveTransaction(form);
+      btn.disabled = false;
+      btn.innerText = 'Simpan Transaksi';
+    })
+    .catch(err => {
+      alert('Gagal menyimpan data!');
+      btn.disabled = false;
+      btn.innerText = 'Simpan Transaksi';
+      console.error(err);
+    });
   }
 
-  // Load Laporan Data
+  // Fetch Laporan API
   function loadLaporan() {
     var entitas = document.getElementById('filter-entitas').value;
     var tglAwal = document.getElementById('filter-tgl-awal').value;
     var tglAkhir = document.getElementById('filter-tgl-akhir').value;
 
-    google.script.run.withSuccessHandler(function(data) {
-      var tbody = document.getElementById('laporan-table-body');
-      tbody.innerHTML = '';
+    fetch(`${GAS_URL}?action=getLaporan&entitas=${entitas}&tglAwal=${tglAwal}&tglAkhir=${tglAkhir}`)
+      .then(res => res.json())
+      .then(data => {
+        var tbody = document.getElementById('laporan-table-body');
+        tbody.innerHTML = '';
 
-      if(data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3">Tidak ada data transaksi ditemukan.</td></tr>';
-        return;
-      }
+        if(data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3">Tidak ada data transaksi ditemukan.</td></tr>';
+          return;
+        }
 
-      data.forEach(function(row) {
-        var badge = row.Jenis === 'Pemasukan' ? 'bg-success' : 'bg-danger';
-        tbody.innerHTML += `
-          <tr>
-            <td>${formatDate(row.Tanggal)}</td>
-            <td><span class="badge bg-secondary">${row.Entitas}</span></td>
-            <td>${row.Kategori}</td>
-            <td>${row.Keterangan || '-'}</td>
-            <td><span class="badge ${badge}">${row.Jenis}</span></td>
-            <td class="text-end fw-bold">${formatRupiah(row.Jumlah)}</td>
-          </tr>
-        `;
-      });
-    }).getReportData(entitas, tglAwal, tglAkhir);
+        data.forEach(function(row) {
+          var badge = row.Jenis === 'Pemasukan' ? 'bg-success' : 'bg-danger';
+          tbody.innerHTML += `
+            <tr>
+              <td>${formatDate(row.Tanggal)}</td>
+              <td><span class="badge bg-secondary">${row.Entitas}</span></td>
+              <td>${row.Kategori}</td>
+              <td>${row.Keterangan || '-'}</td>
+              <td><span class="badge ${badge}">${row.Jenis}</span></td>
+              <td class="text-end fw-bold">${formatRupiah(row.Jumlah)}</td>
+            </tr>
+          `;
+        });
+      })
+      .catch(err => console.error('Error Laporan:', err));
   }
 
-  // Initial Auto-Load
   window.onload = function() {
     loadDashboard();
   };
