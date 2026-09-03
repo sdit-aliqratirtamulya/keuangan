@@ -4,8 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistem Manajemen Kas Sekolah & Yayasan</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- SheetJS & ExcelJS for Excel Export -->
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.3.0/dist/exceljs.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; }
@@ -13,8 +17,10 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex">
 
+  <!-- Sidebar Component -->
   <aside id="sidebar" class="bg-indigo-900 text-white w-64 min-h-screen flex flex-col justify-between transition-all duration-300 relative z-20">
     <div>
+      <!-- Sidebar Header -->
       <div class="p-5 flex items-center justify-between border-b border-indigo-800">
         <div class="flex items-center space-x-3 overflow-hidden">
           <div class="p-2 bg-indigo-600 rounded-xl shrink-0">
@@ -30,6 +36,7 @@
         </button>
       </div>
 
+      <!-- Navigation Links -->
       <nav class="p-4 space-y-2">
         <div class="text-[10px] font-semibold text-indigo-400 uppercase tracking-wider px-3 mb-2 sidebar-text">Pilih Entitas</div>
         
@@ -42,19 +49,28 @@
           <i data-lucide="building-2" class="w-5 h-5 shrink-0"></i>
           <span class="sidebar-text whitespace-nowrap">Kas Yayasan</span>
         </button>
+
+        <div class="pt-4 text-[10px] font-semibold text-indigo-400 uppercase tracking-wider px-3 mb-2 sidebar-text">Menu Laporan</div>
+        
+        <button id="navLaporan" onclick="switchView('laporan')" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-indigo-200 hover:bg-indigo-800/50 hover:text-white">
+          <i data-lucide="file-spreadsheet" class="w-5 h-5 shrink-0"></i>
+          <span class="sidebar-text whitespace-nowrap">Laporan Bulanan</span>
+        </button>
       </nav>
     </div>
 
     <div class="p-4 border-t border-indigo-800">
       <div class="flex items-center space-x-3 text-xs text-indigo-300">
         <i data-lucide="shield-check" class="w-5 h-5 shrink-0 text-emerald-400"></i>
-        <span class="sidebar-text whitespace-nowrap">Sistem Terintegrasi v2.0</span>
+        <span class="sidebar-text whitespace-nowrap">Sistem Terintegrasi v2.5</span>
       </div>
     </div>
   </aside>
 
+  <!-- Main Content Wrapper -->
   <div class="flex-grow flex flex-col min-w-0">
     
+    <!-- Topbar -->
     <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
       <div class="flex items-center space-x-4">
         <button onclick="toggleSidebar()" class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors">
@@ -63,92 +79,172 @@
         <h2 id="currentTitle" class="text-xl font-bold text-slate-800">Laporan Kas Sekolah</h2>
       </div>
       
-      <button onclick="openModal()" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-indigo-100 transition-all">
+      <button id="btnTambahTop" onclick="openModal()" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium shadow-md shadow-indigo-100 transition-all">
         <i data-lucide="plus-circle" class="w-4 h-4"></i>
         <span>Tambah Transaksi</span>
       </button>
     </header>
 
+    <!-- Content Body -->
     <main class="p-6 space-y-6 overflow-y-auto">
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Pemasukan</p>
-            <h3 id="txtMasuk" class="text-2xl font-bold text-emerald-600 mt-1">Rp 0</h3>
+      <!-- VIEW 1: DASHBOARD TRANSAKSI -->
+      <div id="viewDashboard" class="space-y-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Pemasukan</p>
+              <h3 id="txtMasuk" class="text-2xl font-bold text-emerald-600 mt-1">Rp 0</h3>
+            </div>
+            <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+              <i data-lucide="arrow-down-left" class="w-6 h-6"></i>
+            </div>
           </div>
-          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-            <i data-lucide="arrow-down-left" class="w-6 h-6"></i>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Pengeluaran</p>
+              <h3 id="txtKeluar" class="text-2xl font-bold text-rose-600 mt-1">Rp 0</h3>
+            </div>
+            <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+              <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+            </div>
+          </div>
+
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Saldo Akhir</p>
+              <h3 id="txtSaldo" class="text-2xl font-bold text-indigo-600 mt-1">Rp 0</h3>
+            </div>
+            <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+              <i data-lucide="scale" class="w-6 h-6"></i>
+            </div>
           </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Pengeluaran</p>
-            <h3 id="txtKeluar" class="text-2xl font-bold text-rose-600 mt-1">Rp 0</h3>
-          </div>
-          <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
-            <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+        <!-- Recommendation Card -->
+        <div id="recommendationCard" class="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white p-5 rounded-2xl shadow-md relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="flex items-start space-x-4">
+            <div class="p-3 bg-white/10 rounded-xl backdrop-blur-md shrink-0">
+              <i data-lucide="sparkles" class="w-6 h-6 text-amber-300"></i>
+            </div>
+            <div>
+              <h4 class="font-bold text-base flex items-center gap-2">
+                Rekomendasi Keuangan
+                <span id="badgeStatus" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-normal">Sehat</span>
+              </h4>
+              <p id="txtRecommendation" class="text-sm text-indigo-100 mt-1">Memuat analisis data transaksi...</p>
+            </div>
           </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Saldo Akhir</p>
-            <h3 id="txtSaldo" class="text-2xl font-bold text-indigo-600 mt-1">Rp 0</h3>
+        <!-- Data Table Card -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+            <h3 class="font-bold text-slate-800 text-base">Riwayat Transaksi Real-Time</h3>
+            <button onclick="loadData()" class="text-slate-400 hover:text-indigo-600 transition-colors p-1" title="Refresh Data">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            </button>
           </div>
-          <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-            <i data-lucide="scale" class="w-6 h-6"></i>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                  <th class="p-4">Tanggal</th>
+                  <th class="p-4">Jenis</th>
+                  <th class="p-4">Kategori</th>
+                  <th class="p-4">Keterangan</th>
+                  <th class="p-4 text-right">Jumlah</th>
+                  <th class="p-4 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
+                <tr>
+                  <td colspan="6" class="p-8 text-center text-slate-400">Memuat data...</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <div id="recommendationCard" class="bg-gradient-to-r from-indigo-900 to-indigo-800 text-white p-5 rounded-2xl shadow-md relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div class="flex items-start space-x-4">
-          <div class="p-3 bg-white/10 rounded-xl backdrop-blur-md shrink-0">
-            <i data-lucide="sparkles" class="w-6 h-6 text-amber-300"></i>
-          </div>
-          <div>
-            <h4 class="font-bold text-base flex items-center gap-2">
-              Rekomendasi Keuangan
-              <span id="badgeStatus" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-normal">Sehat</span>
-            </h4>
-            <p id="txtRecommendation" class="text-sm text-indigo-100 mt-1">Memuat analisis data transaksi...</p>
-          </div>
-        </div>
-      </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex justify-between items-center">
-          <h3 class="font-bold text-slate-800 text-base">Riwayat Transaksi</h3>
-          <button onclick="loadData()" class="text-slate-400 hover:text-indigo-600 transition-colors p-1" title="Refresh Data">
-            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      <!-- VIEW 2: LAPORAN BULANAN & EKSPOR EXCEL -->
+      <div id="viewLaporan" class="space-y-6 hidden">
+        
+        <!-- Filter & Action Card -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Pilih Bulan & Tahun</label>
+              <input type="month" id="filterMonth" onchange="loadMonthlyReport()" class="px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium text-slate-700">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-500 mb-1">Pilih Entitas</label>
+              <select id="filterEntitas" onchange="loadMonthlyReport()" class="px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-medium text-slate-700">
+                <option value="KasSekolah">Kas Sekolah</option>
+                <option value="KasYayasan">Kas Yayasan</option>
+              </select>
+            </div>
+          </div>
+
+          <button onclick="exportToExcel()" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm shadow-md shadow-emerald-100 transition-all">
+            <i data-lucide="download" class="w-4 h-4"></i>
+            <span>Ekspor File Excel (.xlsx)</span>
           </button>
         </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="bg-slate-50 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                <th class="p-4">Tanggal</th>
-                <th class="p-4">Jenis</th>
-                <th class="p-4">Kategori</th>
-                <th class="p-4">Keterangan</th>
-                <th class="p-4 text-right">Jumlah</th>
-                <th class="p-4 text-center">Aksi</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
-              <tr>
-                <td colspan="6" class="p-8 text-center text-slate-400">Memuat data...</td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Monthly Summary Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pemasukan Bulan Ini</p>
+            <h3 id="mTxtMasuk" class="text-2xl font-bold text-emerald-600 mt-1">Rp 0</h3>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Pengeluaran Bulan Ini</p>
+            <h3 id="mTxtKeluar" class="text-2xl font-bold text-rose-600 mt-1">Rp 0</h3>
+          </div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Surplus / Defisit Bulan Ini</p>
+            <h3 id="mTxtSaldo" class="text-2xl font-bold text-indigo-600 mt-1">Rp 0</h3>
+          </div>
         </div>
+
+        <!-- Monthly Data Table -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+          <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+            <h3 class="font-bold text-slate-800 text-base">Detail Transaksi Bulanan</h3>
+            <span id="txtReportPeriod" class="text-xs font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Periode: -</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                  <th class="p-4">Tanggal</th>
+                  <th class="p-4">Jenis</th>
+                  <th class="p-4">Kategori</th>
+                  <th class="p-4">Keterangan</th>
+                  <th class="p-4 text-right">Jumlah</th>
+                </tr>
+              </thead>
+              <tbody id="mTableBody" class="divide-y divide-slate-100 text-sm">
+                <tr>
+                  <td colspan="5" class="p-8 text-center text-slate-400">Pilih bulan untuk melihat laporan.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
       </div>
+
     </main>
   </div>
 
+  <!-- Modal Input Form -->
   <div id="formModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex justify-between items-center">
@@ -195,19 +291,27 @@
     </div>
   </div>
 
+  <!-- JavaScript -->
   <script>
     const GAS_URL = "https://script.google.com/macros/s/AKfycbzJ7nm6tBBLIU-Ez-sXl490nLc4YvVvWiU5IUAkIGV4aZkWaFOuOssxXxtSUsUsZa4H/exec";
 
     let activeTab = 'KasSekolah';
+    let currentView = 'dashboard';
     let isSidebarCollapsed = false;
+    let monthlyReportData = null;
 
     document.addEventListener("DOMContentLoaded", () => {
       lucide.createIcons();
       document.getElementById('tanggal').valueAsDate = new Date();
+      
+      // Set default month to current month YYYY-MM
+      const now = new Date();
+      const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      document.getElementById('filterMonth').value = monthStr;
+      
       loadData();
     });
 
-    // Toggle Sidebar Hide/Show Function
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       const toggleIcon = document.getElementById('toggleIcon');
@@ -229,9 +333,42 @@
       lucide.createIcons();
     }
 
-    // Switch Tab Navigation
+    function switchView(view) {
+      currentView = view;
+      const vDash = document.getElementById('viewDashboard');
+      const vLap = document.getElementById('viewLaporan');
+      const navLap = document.getElementById('navLaporan');
+      const btnTambahTop = document.getElementById('btnTambahTop');
+
+      if(view === 'laporan') {
+        vDash.classList.add('hidden');
+        vLap.classList.remove('hidden');
+        navLap.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all bg-indigo-800 text-white";
+        
+        document.getElementById('navSekolah').className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-indigo-200 hover:bg-indigo-800/50 hover:text-white";
+        document.getElementById('navYayasan').className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-indigo-200 hover:bg-indigo-800/50 hover:text-white";
+        
+        document.getElementById('currentTitle').innerText = "Laporan Bulanan Kas";
+        btnTambahTop.classList.add('hidden');
+        loadMonthlyReport();
+      } else {
+        vLap.classList.add('hidden');
+        vDash.classList.remove('hidden');
+        navLap.className = "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-indigo-200 hover:bg-indigo-800/50 hover:text-white";
+        btnTambahTop.classList.remove('hidden');
+        switchTab(activeTab);
+      }
+    }
+
     function switchTab(tab) {
       activeTab = tab;
+      document.getElementById('filterEntitas').value = tab;
+      
+      if(currentView === 'laporan') {
+        loadMonthlyReport();
+        return;
+      }
+
       const navSekolah = document.getElementById('navSekolah');
       const navYayasan = document.getElementById('navYayasan');
       const title = document.getElementById('currentTitle');
@@ -253,7 +390,6 @@
       return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
     }
 
-    // Analisis Otomatis & Rekomendasi Keuangan
     function generateRecommendation(masuk, keluar, saldo) {
       const txtRec = document.getElementById('txtRecommendation');
       const badge = document.getElementById('badgeStatus');
@@ -270,15 +406,15 @@
       if (saldo < 0) {
         badge.innerText = "Defisit!";
         badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30 font-bold";
-        txtRec.innerText = `Kas mengalami defisit sebesar ${formatRupiah(Math.abs(saldo))}. Segera lakukan penundaan pengeluaran non-prioritas dan tingkatkan pencairan dana.`;
+        txtRec.innerText = `Kas mengalami defisit sebesar ${formatRupiah(Math.abs(saldo))}. Segera lakukan efisiensi pengeluaran.`;
       } else if (ratio > 80) {
         badge.innerText = "Waspada";
         badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 font-semibold";
-        txtRec.innerText = `Pengeluaran telah menyerap ${ratio.toFixed(0)}% dari total pemasukan. Alokasikan sisa saldo dengan hati-hati untuk cadangan operasional.`;
+        txtRec.innerText = `Pengeluaran menyerap ${ratio.toFixed(0)}% dari pemasukan. Pertahankan cadangan saldo operasional.`;
       } else {
         badge.innerText = "Sehat";
         badge.className = "text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 font-semibold";
-        txtRec.innerText = `Arus kas stabil. Rasio pengeluaran berada di tingkat aman (${ratio.toFixed(0)}%). Tersedia cadangan saldo yang siap dialokasikan untuk program baru.`;
+        txtRec.innerText = `Arus kas berada pada level sangat aman. Rasio pengeluaran hanya ${ratio.toFixed(0)}%.`;
       }
     }
 
@@ -291,15 +427,12 @@
         const res = await response.json();
 
         if (res.status === 'success') {
-          // Update Ringkasan
           document.getElementById('txtMasuk').innerText = formatRupiah(res.summary.totalMasuk);
           document.getElementById('txtKeluar').innerText = formatRupiah(res.summary.totalKeluar);
           document.getElementById('txtSaldo').innerText = formatRupiah(res.summary.saldoAkhir);
 
-          // Update Rekomendasi
           generateRecommendation(res.summary.totalMasuk, res.summary.totalKeluar, res.summary.saldoAkhir);
 
-          // Update Tabel
           if (res.data.length === 0) {
             tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">Belum ada data transaksi.</td></tr>`;
             return;
@@ -331,6 +464,157 @@
       } catch (error) {
         tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-rose-500">Gagal memuat data. Periksa URL GAS Anda.</td></tr>`;
       }
+    }
+
+    async function loadMonthlyReport() {
+      const monthStr = document.getElementById('filterMonth').value;
+      const entitas = document.getElementById('filterEntitas').value;
+      const mTableBody = document.getElementById('mTableBody');
+
+      document.getElementById('txtReportPeriod').innerText = `Periode: ${entitas} (${monthStr})`;
+      mTableBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Memuat laporan bulanan...</td></tr>`;
+
+      try {
+        const response = await fetch(`${GAS_URL}?action=getMonthlyReport&sheet=${entitas}&month=${monthStr}`);
+        const res = await response.json();
+
+        if (res.status === 'success') {
+          monthlyReportData = res;
+
+          document.getElementById('mTxtMasuk').innerText = formatRupiah(res.summary.totalMasuk);
+          document.getElementById('mTxtKeluar').innerText = formatRupiah(res.summary.totalKeluar);
+          document.getElementById('mTxtSaldo').innerText = formatRupiah(res.summary.saldoAkhir);
+
+          if (res.data.length === 0) {
+            mTableBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-400">Tidak ada transaksi pada bulan ini.</td></tr>`;
+            return;
+          }
+
+          mTableBody.innerHTML = res.data.map(item => `
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="p-4 text-slate-600">${item.tanggal}</td>
+              <td class="p-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.jenis === 'Masuk' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'}">
+                  ${item.jenis}
+                </span>
+              </td>
+              <td class="p-4 font-medium text-slate-800">${item.kategori}</td>
+              <td class="p-4 text-slate-500">${item.keterangan || '-'}</td>
+              <td class="p-4 text-right font-semibold ${item.jenis === 'Masuk' ? 'text-emerald-600' : 'text-rose-600'}">
+                ${item.jenis === 'Masuk' ? '+' : '-'} ${formatRupiah(item.jumlah)}
+              </td>
+            </tr>
+          `).join('');
+
+          lucide.createIcons();
+        }
+      } catch (error) {
+        mTableBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500">Gagal memuat laporan bulanan.</td></tr>`;
+      }
+    }
+
+    // Ekspor Excel Profesional menggunakan ExcelJS
+    async function exportToExcel() {
+      if (!monthlyReportData || monthlyReportData.data.length === 0) {
+        alert("Tidak ada data laporan untuk diekspor!");
+        return;
+      }
+
+      const entitas = document.getElementById('filterEntitas').value;
+      const monthStr = document.getElementById('filterMonth').value;
+
+      const workbook = new ExcelJS.Workbook();
+      const ws = workbook.addWorksheet('Laporan Bulanan');
+
+      // Title Banner
+      ws.mergeCells('A1:F2');
+      const titleCell = ws.getCell('A1');
+      titleCell.value = `LAPORAN ARUS KAS BULANAN - ${entitas === 'KasSekolah' ? 'SEKOLAH' : 'YAYASAN'}`;
+      titleCell.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFF' } };
+      titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '1E1B4B' } };
+      titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+      // Subtitle Info
+      ws.getCell('A4').value = 'Periode Bulan:';
+      ws.getCell('B4').value = monthStr;
+      ws.getCell('A4').font = { bold: true };
+
+      // Summary Table
+      ws.mergeCells('A6:B6');
+      ws.getCell('A6').value = 'RINGKASAN KEUSANGAN';
+      ws.getCell('A6').font = { bold: true, color: { argb: '1E1B4B' } };
+
+      ws.getCell('A7').value = 'Total Pemasukan';
+      ws.getCell('B7').value = monthlyReportData.summary.totalMasuk;
+      ws.getCell('B7').numberFormat = '"Rp "#,##0';
+
+      ws.getCell('A8').value = 'Total Pengeluaran';
+      ws.getCell('B8').value = monthlyReportData.summary.totalKeluar;
+      ws.getCell('B8').numberFormat = '"Rp "#,##0';
+
+      ws.getCell('A9').value = 'Saldo Akhir / Surplus';
+      ws.getCell('B9').value = monthlyReportData.summary.saldoAkhir;
+      ws.getCell('B9').numberFormat = '"Rp "#,##0';
+      ws.getCell('A9').font = { bold: true };
+      ws.getCell('B9').font = { bold: true };
+
+      // Table Headers Transaksi
+      const headers = ['ID Transaksi', 'Tanggal', 'Jenis', 'Kategori', 'Keterangan', 'Jumlah (Rp)'];
+      const headerRow = ws.addRow([]); // empty row 10
+      const row11 = ws.addRow(headers);
+
+      row11.eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: '312E81' } };
+        cell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FFFFFF' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      });
+
+      // Data Rows
+      monthlyReportData.data.forEach((item, index) => {
+        const row = ws.addRow([
+          item.id,
+          item.tanggal,
+          item.jenis,
+          item.kategori,
+          item.keterangan || '-',
+          item.jumlah
+        ]);
+
+        // Formatting
+        row.getCell(1).alignment = { horizontal: 'center' };
+        row.getCell(2).alignment = { horizontal: 'center' };
+        row.getCell(3).alignment = { horizontal: 'center' };
+        row.getCell(6).numberFormat = '"Rp "#,##0';
+
+        // Zebra Striping
+        if (index % 2 === 1) {
+          row.eachCell((cell) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'F8FAFC' } };
+          });
+        }
+      });
+
+      // Auto Adjust Column Widths
+      ws.columns.forEach(column => {
+        let maxLen = 12;
+        column.eachCell({ includeEmpty: true }, cell => {
+          if (cell.value) {
+            const len = cell.value.toString().length;
+            if (len > maxLen) maxLen = len;
+          }
+        });
+        column.width = maxLen + 4;
+      });
+
+      // Export File
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Laporan_Kas_${entitas}_${monthStr}.xlsx`;
+      a.click();
+      window.URL.revokeObjectURL(url);
     }
 
     async function submitForm(e) {
