@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Manajemen Kas Sekolah & Yayasan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <header class="bg-indigo-900 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-indigo-700 rounded-lg">
+          <i data-lucide="wallet" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">Keuangan Kas</h1>
+          <p class="text-xs text-indigo-200">Sekolah & Yayasan Integrasi</p>
+        </div>
+      </div>
+      <div class="flex bg-indigo-800/60 p-1 rounded-xl">
+        <button id="tabSekolah" onclick="switchTab('KasSekolah')" class="px-4 py-2 text-sm font-medium rounded-lg transition-all bg-white text-indigo-900 shadow">Kas Sekolah</button>
+        <button id="tabYayasan" onclick="switchTab('KasYayasan')" class="px-4 py-2 text-sm font-medium rounded-lg transition-all text-indigo-200 hover:text-white">Kas Yayasan</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <h2 id="currentTitle" class="text-2xl font-bold text-slate-900">Laporan Kas Sekolah</h2>
+        <p class="text-slate-500 text-sm">Kelola arus kas masuk dan keluar secara real-time.</p>
+      </div>
+      <button onclick="openModal()" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl font-medium shadow-md shadow-indigo-200 transition-all">
+        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+        Tambah Transaksi
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-slate-500">Total Pemasukan</p>
+          <h3 id="txtMasuk" class="text-2xl font-bold text-emerald-600 mt-1">Rp 0</h3>
+        </div>
+        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+          <i data-lucide="arrow-down-left" class="w-6 h-6"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-slate-500">Total Pengeluaran</p>
+          <h3 id="txtKeluar" class="text-2xl font-bold text-rose-600 mt-1">Rp 0</h3>
+        </div>
+        <div class="p-3 bg-rose-50 text-rose-600 rounded-xl">
+          <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-slate-500">Saldo Akhir</p>
+          <h3 id="txtSaldo" class="text-2xl font-bold text-indigo-600 mt-1">Rp 0</h3>
+        </div>
+        <div class="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+          <i data-lucide="scale" class="w-6 h-6"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+        <h3 class="font-bold text-slate-800">Riwayat Transaksi</h3>
+        <button onclick="loadData()" class="text-slate-400 hover:text-indigo-600 transition-colors" title="Refresh Data">
+          <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50 text-slate-500 text-xs font-semibold uppercase tracking-wider">
+              <th class="p-4">Tanggal</th>
+              <th class="p-4">Jenis</th>
+              <th class="p-4">Kategori</th>
+              <th class="p-4">Keterangan</th>
+              <th class="p-4 text-right">Jumlah</th>
+              <th class="p-4 text-center">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody" class="divide-y divide-slate-100 text-sm">
+            <tr>
+              <td colspan="6" class="p-8 text-center text-slate-400">Memuat data...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="formModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="text-lg font-bold text-slate-900">Tambah Transaksi Baru</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="trxForm" onsubmit="submitForm(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Tanggal</label>
+          <input type="date" id="tanggal" required class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Jenis Arus Kas</label>
+          <select id="jenis" required class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+            <option value="Masuk">Pemasukan (Masuk)</option>
+            <option value="Keluar">Pengeluaran (Keluar)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Kategori</label>
+          <input type="text" id="kategori" placeholder="Contoh: SPP, Operasional, Donasi" required class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Jumlah (Rp)</label>
+          <input type="number" id="jumlah" min="1" placeholder="0" required class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Keterangan</label>
+          <textarea id="keterangan" rows="2" placeholder="Catatan tambahan..." class="w-full px-3 py-2 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"></textarea>
+        </div>
+
+        <div class="flex gap-3 pt-2">
+          <button type="button" onclick="closeModal()" class="w-1/2 py-2.5 border rounded-xl font-medium text-slate-600 hover:bg-slate-50 text-sm">Batal</button>
+          <button type="submit" id="btnSubmit" class="w-1/2 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium text-sm shadow-md shadow-indigo-200">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // MASUKKAN URL WEB APP GOOGLE APPS SCRIPT ANDA DI SINI
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzJ7nm6tBBLIU-Ez-sXl490nLc4YvVvWiU5IUAkIGV4aZkWaFOuOssxXxtSUsUsZa4H/exec";
+
+    let activeTab = 'KasSekolah';
+
+    document.addEventListener("DOMContentLoaded", () => {
+      lucide.createIcons();
+      document.getElementById('tanggal').valueAsDate = new Date();
+      loadData();
+    });
+
+    function switchTab(tab) {
+      activeTab = tab;
+      
+      const tabSekolah = document.getElementById('tabSekolah');
+      const tabYayasan = document.getElementById('tabYayasan');
+      const title = document.getElementById('currentTitle');
+
+      if(tab === 'KasSekolah') {
+        tabSekolah.className = "px-4 py-2 text-sm font-medium rounded-lg transition-all bg-white text-indigo-900 shadow";
+        tabYayasan.className = "px-4 py-2 text-sm font-medium rounded-lg transition-all text-indigo-200 hover:text-white";
+        title.innerText = "Laporan Kas Sekolah";
+      } else {
+        tabYayasan.className = "px-4 py-2 text-sm font-medium rounded-lg transition-all bg-white text-indigo-900 shadow";
+        tabSekolah.className = "px-4 py-2 text-sm font-medium rounded-lg transition-all text-indigo-200 hover:text-white";
+        title.innerText = "Laporan Kas Yayasan";
+      }
+
+      loadData();
+    }
+
+    function formatRupiah(number) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
+    }
+
+    async function loadData() {
+      const tableBody = document.getElementById('tableBody');
+      tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">Memuat data...</td></tr>`;
+
+      try {
+        const response = await fetch(`${GAS_URL}?action=getData&sheet=${activeTab}`);
+        const res = await response.json();
+
+        if(res.status === 'success') {
+          // Update Ringkasan
+          document.getElementById('txtMasuk').innerText = formatRupiah(res.summary.totalMasuk);
+          document.getElementById('txtKeluar').innerText = formatRupiah(res.summary.totalKeluar);
+          document.getElementById('txtSaldo').innerText = formatRupiah(res.summary.saldoAkhir);
+
+          // Update Tabel
+          if(res.data.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">Belum ada data transaksi.</td></tr>`;
+            return;
+          }
+
+          tableBody.innerHTML = res.data.map(item => `
+            <tr class="hover:bg-slate-50/80 transition-colors">
+              <td class="p-4 text-slate-600">${item.tanggal}</td>
+              <td class="p-4">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${item.jenis === 'Masuk' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                  ${item.jenis}
+                </span>
+              </td>
+              <td class="p-4 font-medium text-slate-800">${item.kategori}</td>
+              <td class="p-4 text-slate-500">${item.keterangan || '-'}</td>
+              <td class="p-4 text-right font-semibold ${item.jenis === 'Masuk' ? 'text-emerald-600' : 'text-rose-600'}">
+                ${item.jenis === 'Masuk' ? '+' : '-'} ${formatRupiah(item.jumlah)}
+              </td>
+              <td class="p-4 text-center">
+                <button onclick="deleteData('${item.id}')" class="p-1.5 text-slate-400 hover:text-rose-600 transition-colors">
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </td>
+            </tr>
+          `).join('');
+
+          lucide.createIcons();
+        }
+      } catch (error) {
+        tableBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-rose-500">Gagal memuat data. Periksa URL GAS Anda.</td></tr>`;
+      }
+    }
+
+    async function submitForm(e) {
+      e.preventDefault();
+      const btnSubmit = document.getElementById('btnSubmit');
+      btnSubmit.innerText = "Menyimpan...";
+      btnSubmit.disabled = true;
+
+      const payload = {
+        tanggal: document.getElementById('tanggal').value,
+        jenis: document.getElementById('jenis').value,
+        kategori: document.getElementById('kategori').value,
+        jumlah: document.getElementById('jumlah').value,
+        keterangan: document.getElementById('keterangan').value
+      };
+
+      try {
+        await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'addData',
+            sheet: activeTab,
+            payload: payload
+          })
+        });
+
+        closeModal();
+        document.getElementById('trxForm').reset();
+        document.getElementById('tanggal').valueAsDate = new Date();
+        loadData();
+      } catch (error) {
+        alert("Gagal menyimpan data!");
+      } finally {
+        btnSubmit.innerText = "Simpan";
+        btnSubmit.disabled = false;
+      }
+    }
+
+    async function deleteData(id) {
+      if(!confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) return;
+
+      try {
+        await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'deleteData',
+            sheet: activeTab,
+            id: id
+          })
+        });
+        loadData();
+      } catch (error) {
+        alert("Gagal menghapus data!");
+      }
+    }
+
+    function openModal() {
+      document.getElementById('formModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('formModal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
